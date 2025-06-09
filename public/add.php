@@ -15,8 +15,8 @@ if ($userLogged === false) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Validate
-    $firstName = trim($_POST['firstname'] ?? null);
-    $lastName = trim($_POST['lastname'] ?? null);
+    $firstName = trim($_POST['first_name'] ?? null);
+    $lastName = trim($_POST['last_name'] ?? null);
     $email = trim($_POST['email'] ?? null);
     $headline = trim($_POST['headline'] ?? null);
     $summary = trim($_POST['summary'] ?? null);
@@ -77,11 +77,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <form method="post" action="<?php echo $_SERVER['PHP_SELF'] ?>">
             <div class="form-group mb-3">
                 <label for="firstname" class="form-label">First Name</label>
-                <input type="text" class="form-control" id="firstname" name="firstname" value="<?php echo (!empty($firstName)) ? $firstName : '' ?>">
+                <input type="text" class="form-control" id="firstname" name="first_name" value="<?php echo (!empty($firstName)) ? $firstName : '' ?>">
             </div>
             <div class="form-group mb-3">
                 <label for="lastname" class="form-label">Last Name</label>
-                <input type="text" class="form-control" id="lastname" name="lastname" value="<?php echo (!empty($lastName)) ? $lastName : '' ?>">
+                <input type="text" class="form-control" id="lastname" name="last_name" value="<?php echo (!empty($lastName)) ? $lastName : '' ?>">
             </div>
             <div class="form-group mb-3">
                 <label for="email" class="form-label">Email</label>
@@ -101,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <div class="d-flex mt-3 justify-content-start">
-                <button class="btn btn-primary" type="submit">Add</button>
+                <button class="btn btn-primary" type="submit" value="Add">Add</button>
                 <a href="index.php" class="btn btn-secondary ms-2">Cancel</a>
             </div>
         </form>

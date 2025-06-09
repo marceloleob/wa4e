@@ -1,6 +1,7 @@
 <?php
 session_start();
 
+$env = 'local';
 $timeout = 1800; // 30 minutes
 
 if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY']) > $timeout) {

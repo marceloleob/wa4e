@@ -14,6 +14,7 @@ $searchParam = "%{$search}%";
 $countSql = "SELECT COUNT(*) FROM Profile";
 $sql = "SELECT * FROM Profile";
 $where = "";
+$order = " ORDER BY profile_id DESC";
 $params = [];
 
 if (!empty($search)) {
@@ -30,7 +31,7 @@ $countStmt->execute($params);
 $totalProfiles = $countStmt->fetchColumn();
 $totalPages = ceil($totalProfiles / $limit);
 
-$stmt = $pdo->prepare($sql . $where . " LIMIT :limit OFFSET :offset");
+$stmt = $pdo->prepare($sql . $where . $order . " LIMIT :limit OFFSET :offset");
 
 foreach ($params as $key => $value) {
     $stmt->bindValue($key, $value, PDO::PARAM_STR);
@@ -52,7 +53,11 @@ if (!empty($_SESSION['alert'])) {
 }
 ?>
 
-    <h2 class="text-center mb-5"><?php echo $userLoggedName ?> Severance's Resume Registry</h2>
+    <?php if ($userLogged): ?>
+        <h2 class="text-center mb-5"><?php echo $userLoggedName ?>'s Resume Registry</h2>
+    <?php else: ?>
+        <h2 class="text-center mb-5">All Resume Registry</h2>
+    <?php endif; ?>
 
     <?php if (!empty($alert)): ?>
         <div class="alert alert-<?php echo $alert['type'] ?>" role="alert" id="alert">

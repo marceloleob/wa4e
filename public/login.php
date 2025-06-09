@@ -7,7 +7,7 @@ $error = null;
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = $_POST['email'] ?? null;
-    $password = $_POST['password'] ?? null;
+    $password = $_POST['pass'] ?? null;
 
     if (empty($email) || empty($password)) {
         $error = "Email and password are required.";
@@ -56,7 +56,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <div class="d-none">Hint: The correct email is <code>umsi@umich.edu</code></div>
             </div>
             <div class="form-floating py-2">
-                <input type="password" name="password" id="password" class="form-control" id="floatingPassword" placeholder="Password">
+                <input type="password" name="pass" id="password" class="form-control" id="floatingPassword" placeholder="Password">
                 <label for="floatingPassword">Password</label>
                 <div class="d-none">Hint: The correct password is <code>php123</code></div>
             </div>

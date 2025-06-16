@@ -134,6 +134,6 @@ if (!empty($_SESSION['alert'])) {
       <div class="alert alert-warning text-center">No records found.</div>
     <?php endif; ?>
 
-    <script src="/assets/js/index.js"></script>
+    <script src="../public/assets/js/index.js"></script>
 
 <?php include '../includes/footer.php'; ?>

@@ -1,3 +1,58 @@
+let countPos = parseInt($('#count_position_fields').val());
+const maxPos = 9;
+
+$(document).ready(function () {
+  $('#addPos').click(function (event) {
+    event.preventDefault();
+
+    let totalPositions = $('#position_fields > div.position').length;
+
+    if (totalPositions >= maxPos) {
+      alert('Maximum of ' + maxPos + ' position entries exceeded!');
+      return;
+    }
+
+    countPos++;
+
+    $('#position_fields').append(
+      `<div id="position${countPos}" class="position">
+            <div class="row">
+                <div class="col-md-2 form-group mb-3">
+                    <label for="year${countPos}" class="form-label">Year</label>
+                    <input type="text" class="form-control" id="year${countPos}" name="year${countPos}" size="4" maxlength="4">
+                </div>
+                <div class="col-md-2 form-group mb-3 align-self-end">
+                    <button type="button" class="btn btn-outline-dark px-3 removePos" value="${countPos}">-</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12 form-group mb-3">
+                    <textarea class="form-control" name="desc${countPos}" rows="5"></textarea>
+                </div>
+            </div>
+        </div>`,
+    );
+
+    $('#count_position_fields').val(countPos);
+    $('#total_position_fields').val(parseInt(totalPositions + 1));
+  });
+
+  $('#position_fields').on('click', '.removePos', function (event) {
+    event.preventDefault();
+
+    let totalPositions = $('#position_fields > div.position').length;
+
+    if (totalPositions == 0) {
+      return;
+    }
+
+    let position = $(this).val();
+
+    $('#position' + position).remove();
+    $('#total_position_fields').val(parseInt(totalPositions - 1));
+  });
+});
+
 document.addEventListener('DOMContentLoaded', function () {
   const form = document.querySelector('form');
   const fields = {
@@ -6,6 +61,7 @@ document.addEventListener('DOMContentLoaded', function () {
     email: document.getElementById('email'),
     headline: document.getElementById('headline'),
     summary: document.getElementById('summary'),
+    totalPositions: document.getElementById('total_position_fields'),
   };
 
   form.addEventListener('submit', function (e) {
@@ -37,6 +93,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (fields.summary.value.trim() === '') {
       showError(fields.summary, 'Summary is required.');
+      hasErrors = true;
+    }
+
+    if (parseInt(fields.totalPositions.value) === 0) {
+      showError(fields.totalPositions, 'At least one Position is required.');
       hasErrors = true;
     }
 

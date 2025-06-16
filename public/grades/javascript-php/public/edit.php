@@ -114,7 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <?php if (!empty($error)): ?>
             <div class="alert alert-danger text-center mb-3"><?php echo $error; ?></div>
-        <?php endif; ?></php>
+        <?php endif; ?>
 
         <form method="post" action="<?php echo $_SERVER['PHP_SELF'] ?>?profile_id=<?php echo $profileId ?>">
             <div class="form-group mb-3">
@@ -150,6 +150,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     </div>
 
-    <script src="/assets/js/profile.js"></script>
+    <script src="../public/assets/js/profile.js"></script>
 
 <?php include '../includes/footer.php'; ?>

@@ -6,7 +6,7 @@ include '../includes/header.php';
 if ($userLogged === false) {
     $_SESSION['alert'] = [
         'type' => 'danger',
-        'message' => 'You need to be logged in',
+        'message' => 'Access denied: You need to be logged in',
     ];
     header("Location: index.php");
     exit;
@@ -32,8 +32,12 @@ if ($profileId === false) {
     exit;
 }
 
-$stmt = $pdo->prepare("SELECT * FROM Profile WHERE profile_id = :profile_id");
-$stmt->execute([':profile_id' => $profileId]);
+// Get Profile
+$stmt = $pdo->prepare("SELECT * FROM Profile WHERE profile_id = :profile_id AND user_id = :user_id");
+$stmt->execute([
+    ':profile_id' => $profileId,
+    ':user_id' => $userLoggedId,
+]);
 $profile = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if ($profile === false) {
@@ -44,9 +48,24 @@ if ($profile === false) {
     header("Location: index.php");
     exit;
 }
+
+$firstName = $profile['first_name'] ?? '';
+$lastName = $profile['last_name'] ?? '';
+$email = $profile['email'] ?? '';
+$headline = $profile['headline'] ?? '';
+$summary = $profile['summary'] ?? '';
+$url = $profile['url'] ?? '';
+
+// Get all positions
+$stmt = $pdo->prepare("SELECT * FROM Position WHERE profile_id = :profile_id");
+$stmt->execute([
+    ':profile_id' => $profileId,
+]);
+$positions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$totalPositionFields = count($positions);
 ?>
 
-    <h2 class="text-center mb-5">Profile information</h2>
+    <h2 class="text-center mb-5">Profile Information</h2>
 
     <div class="d-flex justify-content-end mb-3">
         <?php if ($profile['user_id'] == $userLoggedId): ?>
@@ -61,28 +80,46 @@ if ($profile === false) {
 
         <div class="form-group mb-3">
             <label for="firstname" class="form-label"><strong>First Name:</strong></label>
-            <div><?php echo htmlspecialchars($profile['first_name']) ?></div>
+            <div><?php echo $firstName ?></div>
         </div>
         <div class="form-group mb-3">
             <label for="lastname" class="form-label"><strong>Last Name:</strong></label>
-            <div><?php echo htmlspecialchars($profile['last_name']) ?></div>
+            <div><?php echo $lastName ?></div>
         </div>
         <div class="form-group mb-3">
             <label for="email" class="form-label"><strong>Email:</strong></label>
-            <div><?php echo htmlspecialchars($profile['email']) ?></div>
+            <div><?php echo $email ?></div>
         </div>
         <div class="form-group mb-3">
             <label for="headline" class="form-label"><strong>Headline:</strong></label>
-            <div><?php echo htmlspecialchars($profile['headline']) ?></div>
+            <div><?php echo $headline ?></div>
         </div>
         <div class="form-group mb-3">
             <label for="summary" class="form-label"><strong>Summary:</strong></label>
-            <div><?php echo nl2br(htmlspecialchars($profile['summary'])) ?></div>
+            <div><?php echo nl2br(htmlspecialchars($summary)) ?></div>
         </div>
-        <?php if (!empty($profile['url'])): ?>
+        <?php if (!empty($url)): ?>
             <div class="form-group mb-3">
                 <label for="photo" class="form-label"><strong>Photo:</strong></label>
-                <div><img src="<?php echo htmlspecialchars($profile['url']) ?>" class="img-fluid" alt="Photo"></div>
+                <div><img src="<?php echo htmlspecialchars($url) ?>" class="img-fluid" alt="Photo"></div>
+            </div>
+        <?php endif; ?>
+
+        <?php if ($totalPositionFields) : ?>
+            <hr />
+
+            <h5 class="mt-4 mb-3">
+                Positions
+            </h5>
+
+            <div id="position_fields">
+
+                <?php foreach ($positions as $data) : ?>
+                    <div class="form-group mb-3">
+                        <label for="year" class="form-label"><strong>Year:</strong> <?php echo $data['year'] ?></label>
+                        <div><?php echo nl2br(htmlspecialchars($data['description'])) ?></div>
+                    </div>
+                <?php endforeach; ?>
             </div>
         <?php endif; ?>
 

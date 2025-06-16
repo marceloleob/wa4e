@@ -45,7 +45,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <main class="form-signin m-auto border p-3 rounded" style="width: 450px;">
         <?php if (!empty($error)): ?>
             <div class="alert alert-danger text-center"><?php echo $error; ?></div>
-        <?php endif; ?></php>
+        <?php endif; ?>
         <form method="post" action="<?php echo $_SERVER['PHP_SELF'] ?>">
             <h1 class="h3 mb-2 fw-normal">Please sign in</h1>
             <div class="form-text mb-4">For a password hint, view source and find an account and password hint in the HTML comments.</div>
@@ -69,6 +69,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </main>
 </div>
 
-<script src="/assets/js/login.js"></script>
+<script src="../public/assets/js/login.js"></script>
 
 <?php include '../includes/footer.php'; ?>

@@ -57,8 +57,32 @@ $headline = $profile['headline'] ?? '';
 $summary = $profile['summary'] ?? '';
 $url = $profile['url'] ?? '';
 
+// Get all educations
+$sqlEducation = "SELECT
+                    Education.profile_id,
+                    Education.institution_id,
+                    Education.education_rank,
+                    Education.year,
+                    Institution.name AS school
+                FROM Education
+                INNER JOIN Institution ON (Education.institution_id = Institution.institution_id)
+                WHERE Education.profile_id = :profile_id
+                ORDER BY Education.education_rank ASC";
+$stmt = $pdo->prepare($sqlEducation);
+$stmt->execute([
+    ':profile_id' => $profileId,
+]);
+$educations = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$countEducationFields = count($educations);
+$totalEducationFields = count($educations);
+
 // Get all positions
-$stmt = $pdo->prepare("SELECT * FROM Position WHERE profile_id = :profile_id");
+$sqlPosition = "SELECT
+                    *
+                FROM Position
+                WHERE profile_id = :profile_id
+                ORDER BY position_rank ASC";
+$stmt = $pdo->prepare($sqlPosition);
 $stmt->execute([
     ':profile_id' => $profileId,
 ]);
@@ -80,6 +104,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $summary = trim($_POST['summary'] ?? '');
     $url = isset($_POST['url']) ? trim($_POST['url']) : '';
 
+    $countEducationFields = intval($_POST['count_education_fields']);
+    $totalEducationFields = intval($_POST['total_education_fields']);
     $countPositionFields = intval($_POST['count_position_fields']);
     $totalPositionFields = intval($_POST['total_position_fields']);
 
@@ -91,9 +117,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Invalid URL. Must start with http:// or https://';
     } elseif (!empty($url) && !isUrlAccessible($url)) {
         $error = 'The provided image URL is not accessible.';
+    // } elseif ($totalEducationFields < 1) {
+    //     $error = 'At least one Education is required.';
     // } elseif ($totalPositionFields < 1) {
     //     $error = 'At least one Position is required.';
     } else {
+        // Education validate
+        $error = validateEducations($_POST, $countEducationFields);
         // Position validate
         $error = validatePositions($_POST, $countPositionFields);
 
@@ -123,36 +153,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':user_id' => $userLoggedId,
                 ]);
 
+                // Clear out the old educations entries
+                deleteEducations($pdo, $profileId);
+                // Insert Educations
+                insertEducations($pdo, $profileId, $_POST);
+
                 // Clear out the old position entries
-                $queryPositions = "DELETE FROM Position WHERE profile_id = :profileId";
-                $stmtPositions = $pdo->prepare($queryPositions);
-                $stmtPositions->execute([
-                    ':profileId' => $profileId,
-                ]);
-
+                deletePositions($pdo, $profileId);
                 // Insert Positions
-                $rank = 1;
-                for ($i = 1; $i <= $countPositionFields; $i++) {
-
-                    if (!isset($_POST['year' . $i]) || !isset($_POST['desc' . $i])) {
-                        continue;
-                    }
-
-                    $queryPositions = "INSERT INTO Position
-                                            (profile_id, position_rank, year, description)
-                                        VALUES
-                                            ( :profileId, :rank, :year, :desc)";
-                    $stmtPositions = $pdo->prepare($queryPositions);
-
-                    $stmtPositions->execute([
-                        ':profileId' => $profileId,
-                        ':rank' => $rank,
-                        ':year' => intval($_POST['year' . $i]),
-                        ':desc' => htmlentities($_POST['desc' . $i]),
-                    ]);
-
-                    $rank++;
-                }
+                insertPositions($pdo, $profileId, $_POST);
 
                 $_SESSION['alert'] = [
                     'type' => 'success',
@@ -187,19 +196,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <form method="post" action="<?php echo $_SERVER['PHP_SELF'] ?>?profile_id=<?php echo $profileId ?>">
             <div class="form-group mb-3">
                 <label for="firstname" class="form-label">First Name</label>
-                <input type="text" class="form-control" id="firstname" name="first_name" value="<?php echo $firstName ?>" autocomplete="false">
+                <input type="text" class="form-control" id="firstname" name="first_name" value="<?php echo htmlentities($firstName) ?>" autocomplete="false">
             </div>
             <div class="form-group mb-3">
                 <label for="lastname" class="form-label">Last Name</label>
-                <input type="text" class="form-control" id="lastname" name="last_name" value="<?php echo $lastName ?>" autocomplete="false">
+                <input type="text" class="form-control" id="lastname" name="last_name" value="<?php echo htmlentities($lastName) ?>" autocomplete="false">
             </div>
             <div class="form-group mb-3">
                 <label for="email" class="form-label">Email</label>
-                <input type="text" class="form-control" id="email" name="email" value="<?php echo $email ?>" autocomplete="false">
+                <input type="text" class="form-control" id="email" name="email" value="<?php echo htmlentities($email) ?>" autocomplete="false">
             </div>
             <div class="form-group mb-3">
                 <label for="headline" class="form-label">Headline</label>
-                <input type="text" class="form-control" id="headline" name="headline" value="<?php echo $headline ?>" autocomplete="false">
+                <input type="text" class="form-control" id="headline" name="headline" value="<?php echo htmlentities($headline) ?>" autocomplete="false">
             </div>
             <div class="form-group mb-3">
                 <label for="summary" class="form-label">Summary</label>
@@ -211,6 +220,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <input type="text" class="form-control" id="url" name="url" value="<?php echo isset($url) ? htmlspecialchars($url) : ''; ?>">
             </div>
             -->
+
+            <hr />
+
+            <h5 class="mt-4 mb-3">
+                Education <button type="button" id="addEdu" class="btn btn-outline-dark px-3 ms-2">+</button>
+            </h5>
+
+            <div id="education_fields">
+                <?php if ($isPost == false && $totalEducationFields > 0) : ?>
+                    <?php $count = 1; ?>
+                    <?php foreach ($educations as $data) : ?>
+                        <div id="education<?php echo $count; ?>" class="education">
+                            <div class="row">
+                                <div class="col-md-2 form-group mb-3">
+                                    <label for="edu_year<?php echo $count; ?>" class="form-label">Year</label>
+                                    <input type="text" class="form-control" id="edu_year<?php echo $count; ?>" name="edu_year<?php echo $count; ?>" value="<?php echo $data['year'] ?>" size="4" maxlength="4">
+                                </div>
+                                <div class="col-md-2 form-group mb-3 align-self-end">
+                                    <button type="button" class="btn btn-outline-dark px-3 removeEdu" value="<?php echo $count; ?>">-</button>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12 form-group mb-3">
+                                    <label for="edu_school<?php echo $count; ?>" class="form-label">School</label>
+                                    <input type="text" name="edu_school<?php echo $count; ?>" class="form-control ui-autocomplete-input school" value="<?php echo $data['school'] ?>" autocomplete="off">
+                                </div>
+                            </div>
+                        </div>
+                        <?php $count++; ?>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+
+                <?php if ($isPost == true && $countEducationFields > 0) : ?>
+                    <?php for ($i = 1; $i <= $countEducationFields; $i++) : ?>
+                        <?php if (isset($_POST['edu_year' . $i]) || isset($_POST['desc' . $i])) : ?>
+                            <div id="education<?php echo $i; ?>" class="education">
+                                <div class="row">
+                                    <div class="col-md-2 form-group mb-3">
+                                        <label for="edu_year<?php echo $i; ?>" class="form-label">Year</label>
+                                        <input type="text" class="form-control" name="edu_year<?php echo $i; ?>" value="<?php echo $_POST['edu_year' . $i] ?>" size="4" maxlength="4">
+                                    </div>
+                                    <div class="col-md-2 form-group mb-3 align-self-end">
+                                        <button type="button" class="btn btn-outline-dark px-3 removeEdu" value="<?php echo $i; ?>">-</button>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12 form-group mb-3">
+                                        <label for="edu_school<?php echo $i; ?>" class="form-label">School</label>
+                                        <input type="text" name="edu_school<?php echo $i; ?>" class="form-control ui-autocomplete-input school" value="<?php echo $_POST['edu_school' . $i] ?>" autocomplete="off">
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+                    <?php endfor; ?>
+                <?php endif; ?>
+            </div>
+            <input type="hidden" name="count_education_fields" id="count_education_fields" value="<?php echo ($countEducationFields > 0) ? $countEducationFields : 0 ?>" />
+            <input type="hidden" name="total_education_fields" id="total_education_fields" value="<?php echo ($totalEducationFields > 0) ? $totalEducationFields : 0 ?>" />
 
             <hr />
 

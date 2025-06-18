@@ -45,22 +45,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $totalPositionFields = intval($_POST['total_position_fields']);
 
     if (empty($firstName) || empty($lastName) || empty($email) || empty($headline) || empty($summary)) {
-        $error = 'All fields are required.';
+        $error .= 'All fields are required. <br />';
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = 'Invalid email address.';
+        $error .= 'Invalid email address. <br />';
     } elseif (!empty($url) && !preg_match('/^https?:\/\/.+$/', $url)) {
-        $error = 'Invalid URL. Must start with http:// or https://';
+        $error .= 'Invalid URL. Must start with http:// or https:// <br />';
     } elseif (!empty($url) && !isUrlAccessible($url)) {
-        $error = 'The provided image URL is not accessible.';
+        $error .= 'The provided image URL is not accessible. <br />';
     // } elseif ($totalEducationFields < 1) {
-    //     $error = 'At least one Education is required.';
+    //     $error .= 'At least one Education is required. <br />';
     // } elseif ($totalPositionFields < 1) {
-    //     $error = 'At least one Position is required.';
+    //     $error .= 'At least one Position is required. <br />';
     } else {
         // Education validate
-        $error = validateEducations($_POST, $countEducationFields);
+        $error .= validateEducations($_POST, $countEducationFields);
         // Position validate
-        $error = validatePositions($_POST, $countPositionFields);
+        $error .= validatePositions($_POST, $countPositionFields);
 
         if (empty($error)) {
 

@@ -24,13 +24,13 @@ function validateEducations($post, $total) :string
             continue;
         }
         if ($count > 9) {
-            return "Maximum of 9 position entries exceeded!";
+            return "Maximum of 9 position entries exceeded! <br />";
         }
         if ( strlen($post['edu_year' . $i]) < 4 || strlen($post['edu_school' . $i]) == 0 ) {
-            return "All Educations are required";
+            return "All Educations are required <br />";
         }
         if ( !is_numeric($post['edu_year' . $i]) ) {
-            return "Education year must be numeric";
+            return "Education year must be numeric <br />";
         }
         $count++;
     }
@@ -100,13 +100,13 @@ function validatePositions($post, $total) :string
             continue;
         }
         if ($count > 9) {
-            return "Maximum of 9 position entries exceeded!";
+            return "Maximum of 9 position entries exceeded! <br />";
         }
         if ( strlen($post['year' . $i]) < 4 || strlen($post['desc' . $i]) == 0 ) {
-            return "All Positions are required";
+            return "All Positions are required <br />";
         }
         if ( !is_numeric($post['year' . $i]) ) {
-            return "Position year must be numeric";
+            return "Position year must be numeric <br />";
         }
         $count++;
     }
